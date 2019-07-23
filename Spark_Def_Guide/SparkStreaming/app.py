@@ -37,8 +37,24 @@ simpleTransform = streaming.withColumn("stairs", expr("gt like '%stairs%'")).\
     writeStream.queryName('simple_transformation').format('memory').outputMode('append').start()
 
 from time import sleep
-for x in range(10):
+for x in range(2):
     spark.sql('select * from simple_transformation').show()
+    sleep(1)
+
+
+#https://stackoverflow.com/questions/37975227/what-is-the-difference-between-cube-rollup-and-groupby-operators
+
+deviceModelStats = streaming.cube("gt", "model").avg()\
+    .drop("avg(Arrival_time)")\
+    .drop("avg(Creation_Time)")\
+    .drop("avg(Index)")\
+    .writeStream.queryName("device_counts").format("memory")\
+    .outputMode("complete")\
+    .start()
+
+from time import sleep
+for x in range(10):
+    spark.sql('select * from device_counts').show()
     sleep(1)
 
 activityQuery.awaitTermination()

@@ -1,4 +1,5 @@
 from pyspark.sql import SparkSession
+from pyspark.sql.functions import expr
 
 spark = SparkSession.\
     builder.\
@@ -28,6 +29,16 @@ activityQuery = activityCounts.writeStream.queryName("activity_count").\
 from time import sleep
 for x in range(10):
     spark.sql('select * from activity_count').show()
+    sleep(1)
+
+simpleTransform = streaming.withColumn("stairs", expr("gt like '%stairs%'")).\
+    where("stairs").\
+    where('gt is not null').select("gt", "model", "arrival_time", "creation_time").\
+    writeStream.queryName('simple_transformation').format('memory').outputMode('append').start()
+
+from time import sleep
+for x in range(10):
+    spark.sql('select * from simple_transformation').show()
     sleep(1)
 
 activityQuery.awaitTermination()
